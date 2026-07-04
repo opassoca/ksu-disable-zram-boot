@@ -1,0 +1,7 @@
+id=disable_zram_boot
+name=Disable ZRAM on Boot
+version=v1.0
+versionCode=1
+author=Paçoca | AI: Gemini 3.5 Flash & Claude Sonnet 5 (CLI via Termux) | DC & TG: @opassoca
+description=Roda swapoff no zram0 apos cada boot, com autodesabilitacao apos 3 boots sem sucesso confirmado
+updateJson=

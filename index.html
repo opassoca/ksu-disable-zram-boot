@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disable ZRAM on Boot — Boot Simulation & Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #05060f;
+            --terminal-bg: #0c0e1a;
+            --primary-blue: #4285F4;
+            --primary-red: #EA4335;
+            --primary-yellow: #FBBC05;
+            --primary-green: #34A853;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --accent-glow: rgba(52, 168, 83, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* CONTAINER DE BOOT (SIMULADOR DO CELULAR) */
+        .phone-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            height: 90vh;
+            max-height: 840px;
+            background-color: #000;
+            border: 12px solid #1e293b;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(66, 133, 244, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+
+        /* 1. TELA DE BOOT ANIMADA (GOOGLE INTRO STYLE) */
+        .boot-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .boot-loader {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .boot-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: google-boot-bounce 1.8s infinite ease-in-out;
+        }
+
+        .boot-dot:nth-child(1) { background-color: var(--primary-blue); animation-delay: -0.3s; }
+        .boot-dot:nth-child(2) { background-color: var(--primary-red); animation-delay: -0.2s; }
+        .boot-dot:nth-child(3) { background-color: var(--primary-yellow); animation-delay: -0.1s; }
+        .boot-dot:nth-child(4) { background-color: var(--primary-green); }
+
+        @keyframes google-boot-bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        .boot-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 2px;
+            opacity: 0.8;
+            animation: pulse-text 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-text {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* 2. TELA DE LOGS DO ANDROID (CONSOLE) */
+        .log-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--terminal-bg);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: #34d399; /* Terminal green */
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(52, 168, 83, 0.2);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        .log-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .log-ksu { color: var(--primary-yellow); font-weight: 600; }
+        .log-success { color: var(--primary-green); font-weight: 600; }
+        .log-error { color: var(--primary-red); }
+
+        /* 3. DASHBOARD DO MÓDULO */
+        .dashboard-screen {
+            width: 100%;
+            height: 100%;
+            background-color: var(--terminal-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            z-index: 1;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .dashboard-screen.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .dash-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .dash-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .dash-header p {
+            font-size: 0.85rem;
+            color: var(--primary-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .status-badge {
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary-green);
+            display: inline-block;
+            animation: status-pulse 1.5s infinite;
+        }
+
+        @keyframes status-pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .stat-card {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card h4 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .btn-restart {
+            margin-top: auto;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #1e40af 100%);
+            color: #fff;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        .btn-restart:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(66, 133, 244, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-wrapper">
+        <!-- 1. Tela de Boot do Google -->
+        <div class="boot-screen" id="boot-screen">
+            <div class="boot-loader">
+                <div class="boot-dot"></div>
+                <div class="boot-dot"></div>
+                <div class="boot-dot"></div>
+                <div class="boot-dot"></div>
+            </div>
+            <div class="boot-brand">ANDROID</div>
+        </div>
+
+        <!-- 2. Tela de Console de Boot do Android -->
+        <div class="log-screen" id="log-screen">
+            <div class="log-header">
+                <span>SYSTEM LOGCAT</span>
+                <span id="log-time">00:00:00</span>
+            </div>
+            <div class="log-body" id="log-body">
+                <!-- Inserido dinamicamente -->
+            </div>
+        </div>
+
+        <!-- 3. Dashboard final do Módulo -->
+        <div class="dashboard-screen" id="dashboard-screen">
+            <div class="dash-header">
+                <h2>ZRAM Controller</h2>
+                <p><span class="status-badge"></span> Módulo Ativo & Seguro</p>
+            </div>
+
+            <div class="stat-card">
+                <h4>ZRAM Swap status</h4>
+                <div class="stat-value" style="color: var(--primary-red);">0 MB / OFF</div>
+                <div class="stat-desc">ZRAM foi desativada com sucesso antes da alocação de páginas.</div>
+            </div>
+
+            <div class="stat-card">
+                <h4>Watchdog Anti-Bootloop</h4>
+                <div class="stat-value" style="color: var(--primary-green);">0 / 3 falhas</div>
+                <div class="stat-desc">Contador de falhas resetado. Boot confirmado estável.</div>
+            </div>
+
+            <div class="stat-card">
+                <h4>Economia de Ciclos de CPU</h4>
+                <div class="stat-value" style="color: var(--primary-blue);">~8% a 15%</div>
+                <div class="stat-desc">Livre de overhead de compressão de RAM LZO/LZ4.</div>
+            </div>
+
+            <button class="btn-restart" id="btn-reboot">Simular Reinicialização 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        const bootScreen = document.getElementById('boot-screen');
+        const logScreen = document.getElementById('log-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const logBody = document.getElementById('log-body');
+        const logTime = document.getElementById('log-time');
+        const btnReboot = document.getElementById('btn-reboot');
+
+        // Logs de boot simulados do Android e do Módulo
+        const bootLogs = [
+            { text: "[    0.000000] Booting Linux kernel on physical CPU 0x0", type: "system" },
+            { text: "[    0.000000] Initializing cgroup subsys cpu", type: "system" },
+            { text: "[    0.051020] KernelSU: Version: v1.0.0 (1000)", type: "ksu" },
+            { text: "[    0.103191] KernelSU: load su helper successfully.", type: "ksu" },
+            { text: "[    1.258902] devtmpfs: mounted successfully", type: "system" },
+            { text: "[    2.548911] init: initializing service manager", type: "system" },
+            { text: "[    3.102918] init: loading post-fs-data triggers", type: "system" },
+            { text: ">>> Executing /data/adb/modules/disable_zram_boot/post-fs-data.sh", type: "ksu" },
+            { text: "[disable_zram_boot] Verificando integridade do watchdog...", type: "ksu" },
+            { text: "[disable_zram_boot] Contador atual de falhas: 0/3", type: "ksu" },
+            { text: "[disable_zram_boot] Executando 'swapoff /dev/block/zram0'...", type: "ksu" },
+            { text: "[disable_zram_boot] swapoff: /dev/block/zram0: desativado com sucesso", type: "success" },
+            { text: "[disable_zram_boot] Incrementando contador de boot temporario para 1/3", type: "ksu" },
+            { text: "[    5.928192] init: starting zygote service", type: "system" },
+            { text: "[    7.592810] system_server: entering systemReady() stage", type: "system" },
+            { text: "[   10.201918] init: boot_completed trigger fired", type: "system" },
+            { text: ">>> Executing /data/adb/modules/disable_zram_boot/service.sh", type: "ksu" },
+            { text: "[disable_zram_boot] Detectado sys.boot_completed=1", type: "success" },
+            { text: "[disable_zram_boot] Boot confirmado estavel! Resetando contador para 0", type: "success" },
+            { text: "[   12.189281] system: UI fully loaded, boot cycle finished", type: "success" }
+        ];
+
+        function updateTime() {
+            const now = new Date();
+            logTime.textContent = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function runBootSimulation() {
+            // Resetar estados
+            bootScreen.style.opacity = '1';
+            logScreen.style.opacity = '0';
+            dashboardScreen.classList.remove('active');
+            logBody.innerHTML = '';
+
+            // 1. Mostrar tela de boot por 2.5s
+            setTimeout(() => {
+                bootScreen.style.opacity = '0';
+                logScreen.style.opacity = '1';
+
+                // 2. Imprimir logs linha por linha com atrasos variaveis
+                let i = 0;
+                function printNextLog() {
+                    if (i < bootLogs.length) {
+                        const log = bootLogs[i];
+                        const div = document.createElement('div');
+                        div.className = 'log-line';
+                        
+                        if (log.type === "ksu") {
+                            div.innerHTML = `<span class="log-ksu">${log.text}</span>`;
+                        } else if (log.type === "success") {
+                            div.innerHTML = `<span class="log-success">${log.text}</span>`;
+                        } else {
+                            div.textContent = log.text;
+                        }
+                        
+                        logBody.appendChild(div);
+                        logBody.scrollTop = logBody.scrollHeight;
+                        i++;
+                        
+                        // Atraso variavel para simular a carga real do Kernel
+                        const delay = Math.random() * 250 + 100;
+                        setTimeout(printNextLog, delay);
+                    } else {
+                        // 3. Após todos os logs, abrir o dashboard
+                        setTimeout(() => {
+                            logScreen.style.opacity = '0';
+                            dashboardScreen.classList.add('active');
+                        }, 1200);
+                    }
+                }
+                
+                setTimeout(printNextLog, 500);
+
+            }, 2500);
+        }
+
+        btnReboot.addEventListener('click', runBootSimulation);
+
+        // Inicializar simulacao
+        runBootSimulation();
+    </script>
+</body>
+</html>
