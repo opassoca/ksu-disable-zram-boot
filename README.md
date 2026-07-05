@@ -47,5 +47,12 @@ Disabling system swap early can trigger Out-Of-Memory kernel panics or bootloops
 
 ---
 
+
+## 📱 Termux Integration & Monitoring
+Fully compatible with Android Termux environment. You can monitor the ZRAM status and boot logs directly by running:
+```bash
+su -c "cat /data/adb/disable_zram.log"
+```
+
 ## 👨‍💻 Credits
 Developed with 💙 by [Paçoca (@opassoca)](https://github.com/opassoca).

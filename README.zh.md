@@ -47,5 +47,12 @@
 
 ---
 
+
+## 📱 Termux 集成与监控
+完全兼容 Android Termux 环境。您可以通过运行以下命令直接监控 ZRAM 状态和启动日志：
+```bash
+su -c "cat /data/adb/disable_zram.log"
+```
+
 ## 👨‍💻 贡献者
 由 [Paçoca (@opassoca)](https://github.com/opassoca) 用 💙 开发。

@@ -47,5 +47,12 @@ Desativar o swap do sistema de forma precoce pode, em ROMs customizadas específ
 
 ---
 
+
+## 📱 Integração e Monitoramento no Termux
+Totalmente compatível com o ambiente Android Termux. Você pode monitorar o status do ZRAM e logs de boot executando:
+```bash
+su -c "cat /data/adb/disable_zram.log"
+```
+
 ## 👨‍💻 Créditos
 Desenvolvido com 💙 por [Paçoca (@opassoca)](https://github.com/opassoca).

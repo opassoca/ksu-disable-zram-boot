@@ -47,5 +47,12 @@
 
 ---
 
+
+## 📱 Интеграция и мониторинг в Termux
+Полностью совместим с средой Android Termux. Вы можете отслеживать статус ZRAM и логи загрузки, выполнив:
+```bash
+su -c "cat /data/adb/disable_zram.log"
+```
+
 ## 👨‍💻 Авторы
 Разработано с 💙 [Paçoca (@opassoca)](https://github.com/opassoca).
