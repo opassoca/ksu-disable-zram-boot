@@ -54,5 +54,14 @@
 su -c "cat /data/adb/disable_zram.log"
 ```
 
+
+## ⌨️ Алиас быстрого доступа (Необязательно)
+
+Чтобы мгновенно проверять логи загрузки ZRAM из любого каталога в Termux, добавьте этот алиас в ваш `~/.bashrc`:
+
+```bash
+alias zram="su -c 'cat /data/adb/disable_zram.log'"
+```
+
 ## 👨‍💻 Авторы
 Разработано с 💙 [Paçoca (@opassoca)](https://github.com/opassoca).

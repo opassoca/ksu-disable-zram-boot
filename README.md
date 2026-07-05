@@ -54,5 +54,14 @@ Fully compatible with Android Termux environment. You can monitor the ZRAM statu
 su -c "cat /data/adb/disable_zram.log"
 ```
 
+
+## ⌨️ Fast Access Alias (Optional)
+
+To check the ZRAM boot logs instantly from any directory in Termux, add this alias to your `~/.bashrc`:
+
+```bash
+alias zram="su -c 'cat /data/adb/disable_zram.log'"
+```
+
 ## 👨‍💻 Credits
 Developed with 💙 by [Paçoca (@opassoca)](https://github.com/opassoca).

@@ -54,5 +54,14 @@
 su -c "cat /data/adb/disable_zram.log"
 ```
 
+
+## ⌨️ 快速访问别名 (可选)
+
+要在 Termux 中的任何目录下即时查看 ZRAM 启动日志，请将此别名添加到您的 `~/.bashrc` 中：
+
+```bash
+alias zram="su -c 'cat /data/adb/disable_zram.log'"
+```
+
 ## 👨‍💻 贡献者
 由 [Paçoca (@opassoca)](https://github.com/opassoca) 用 💙 开发。
